@@ -1,0 +1,276 @@
+import requests
+import re
+import os
+from bs4 import BeautifulSoup 
+from datetime import datetime # 현재 시간
+import matplotlib.pyplot as plt # 그래프
+from matplotlib import style # 그래프
+import pandas as pd
+import squarify 
+import matplotlib # 그래프
+from matplotlib import font_manager, rc # 한글
+import platform # 한글
+from bokeh.io import output_notebook, output_file, show
+from bokeh.plotting import figure
+import plotly.express as px
+
+# 한글로 그래프 출력 
+if platform.system() == 'Windows':
+# 윈도우인 경우
+    font_name = font_manager.FontProperties(fname="c:/Windows/Fonts/malgun.ttf").get_name()
+    rc('font', family=font_name)
+else:    
+# Mac 인 경우
+    rc('font', family='AppleGothic')
+    
+matplotlib.rcParams['axes.unicode_minus'] = False   
+#그래프에서 마이너스 기호가 표시되도록 하는 설정입니다.
+
+# 테이블 제작에 사용한 날짜와 첫 url (테이블 1)
+now = datetime.now()
+url = "https://finance.naver.com/sise/theme.nhn?&page="
+
+# 빈 csv 파일 1개 제작 (테이블 1)
+f = open("테마주.csv", "w", encoding = "utf-8-sig", newline = "") 
+
+writer = csv.writer(f) # 쉘로 이동
+title = "테마명 전일대비 최근3일등락률 전일대비등락상승 전일대비등락보합 전일대비등락하락 주도주1 주도주2".split(" ")
+writer.writerow(title) # 한 행을 사용
+#print(title)
+
+# 테이블 1을 만들기 위해 게시판이 몇 페이지까지 있는지 확인해보자.
+maximum = 0
+page = 1
+res = requests.get(url + str(page))
+res.raise_for_status()
+soup = BeautifulSoup(res.text, "lxml")
+
+while True:
+    page_list = soup.findAll("a", {"href": "/sise/theme.nhn?&page=" + str(page)})
+    if not page_list:
+        maximum = page - 1
+        break
+    page = page + 1
+#print("총 " + str(maximum) + " 개의 페이지가 확인 됬습니다.")
+
+# 데이터를 받아서 파서로 나눔(테이블 1)
+print("테마명 : 몇 개의 페이지를 가져오시겠습니까?(최소 1~ 최대 6)(추천 : 1)")
+k = int(input())
+
+list001 = [] # 전일대비
+list002 = [] # 테마명
+
+for page in range(1,k+1): # 테마주 총 6페이지가 존재 -> 최대 (1,7)
+    res = requests.get(url + str(page))
+    res.raise_for_status()
+    soup = BeautifulSoup(res.text, "lxml")
+
+    # 파서 나눈 것을 더 잘게 쪼개서 빈 1개의 csv파일에 넣는다. (테이블 1)
+    data_rows = soup.find("table", attrs={"class":"type_1 theme"}).find_all("tr") #테이블 - 한 열
+    for row in data_rows:
+        columns = row.find_all("td") # 테마명, 전일대비, ...
+        if len(columns) <= 1:
+            continue
+        data = [column.get_text().strip() for column in columns] 
+        data[1] = re.sub("[+.%]", "", data[1])
+        data[1] = int(data[1])/100
+        list001.append(data[1])
+        list002.append(data[0])
+        #print(data[1])
+        #print(data)
+        writer.writerow(data)
+f.close() # 저장
+
+# 트리맵 제작 (테이블 1)
+df = pd.DataFrame({'전일대비' : list001}, index = list002)
+#print(df)
+
+# create a color palette, mapped to these values
+cmap = matplotlib.cm.prism
+mini=min(list001)
+maxi=max(list001)
+norm = matplotlib.colors.Normalize(vmin=mini, vmax=maxi)
+colors = [cmap(norm(value)) for value in list001]
+lbl = ["+" + str('{:5.2f}'.format(i)) + "%" for i in list001]
+
+# Change color
+squarify.plot(sizes=list001, label=lbl, value = list002, alpha= 1, color=colors )
+plt.axis('off')
+plt.show()
+
+df01 = pd.read_csv("C:\\Users\\Playdata\\테마주.csv")
+df01["테마주"] = "네이버 테마주 - 테마명(전일대비)"
+
+fig01 = px.treemap (df01, path = ['테마주', '테마명', '주도주1'], values = '전일대비') #주도주 1개만 작성
+fig01.show()
+
+fig02 = px.treemap (df01, path = ['테마주', '테마명', '주도주1'], values = '전일대비', color = '전일대비') # 전일대비를 컬러로
+fig02.show()
+
+os.chdir("C:\\Users\\Playdata\\table02\\")
+
+# 바로가기 만들기 (테이블 1)
+items = soup.find_all("td", attrs = {"class":"col_type1"})
+for item in items:
+    link = item.find("a")["href"] 
+    name = item.a.text
+    name = name.replace('/', ',') # (주의) open 함수를 이용할 때, '/'를 경로로 인식해 error가 발생한다.  
+    #print(name, "바로가기 : {}".format("https://finance.naver.com" + link))
+    url01 = "https://finance.naver.com" + link # 만든 이유 : 테이블 2 제작에 사용하기 위해
+    
+######################################################################################################################################
+    # 빈 csv파일 k개 제작 (테이블 2)
+    f01 = open(file= name+".csv", mode = "w+", encoding = "utf-8-sig", newline = "")
+    writer01 = csv.writer(f01)
+    title01 ="종목명 테마편입사유 현재가 전일비 등락률 매수호가 매도호가 거래량 거래대금 전일거래량 토론방 테마명".split(" ")
+    writer01.writerow(title01) #한 행을 사용
+    res01 = requests.get(url01)
+    res01.raise_for_status()
+    soup01 = BeautifulSoup(res01.text, "lxml")
+    
+    # 파서 나눈 것을 더 잘게 쪼개서 빈 k개의 csv파일에 하나씩 넣는다 (테이블 2)
+    list003 = [] # 현재가
+    list004 = [] # 종목명
+    data_rows01 = soup01.find("table", attrs={"class":"type_5"}).find_all("tr")
+    
+    for row01 in data_rows01:
+        columns01 = row01.find_all("td") # 회사명, 현재가 , ...
+        if len(columns01) <= 1:
+            continue
+        data01 = [column01.get_text().strip() for column01 in columns01]
+        data01[0] = re.sub("[*]", "", data01[0]) # 코스닥인 경우, 종목명* 형태 
+        data01[2] = re.sub("[,]", "", data01[2]) # 현재가의 천자리 구분이 , 으로 되어있어 제거
+        data01[2] = int(data01[2])
+        list003.append(data01[2])
+        list004.append(data01[0])
+        data01.append(name)
+        writer01.writerow(data01)
+#####################################################################################################################
+    df1 = pd.DataFrame({'현재가' : list003}, index = list004)
+    
+    # create a color palette, mapped to these values
+    cmap01 = matplotlib.cm.prism
+    mini01=min(list003)
+    maxi01=max(list003)
+    norm01 = matplotlib.colors.Normalize(vmin=mini01, vmax=maxi01)
+    colors01 = [cmap01(norm(value)) for value in list003]
+
+    # Change color
+    squarify.plot(sizes=list003, label=list003, value = list004, alpha= 1, color=colors )
+    plt.axis('off')
+    #plt.show() 
+    #(실행 시 유의)실행하면 40개의 트리맵 제작
+    
+    
+    # 첫번째 table과 두번째 테이블을 테마명을 기준으로 모두 결합 (outer 조인)        
+import glob
+# import xlrd
+#pip install glob2
+import xlsxwriter
+#pip install openpyxl
+csv_data_file=glob.glob("C:\\Users\\Playdata\\table02\\*.csv") 
+df02 = pd.DataFrame()
+for file in csv_data_file:
+    try:
+        df2 = pd.read_csv(file)
+        df02 = df02.append(df2)
+    except:
+        continue
+
+excel_file_name ="C:\\Users\\Playdata\\table02\\total.xlsx"
+excel_total_file_writer =pd.ExcelWriter(excel_file_name, engine='xlsxwriter')
+df02.to_excel(excel_total_file_writer, sheet_name='Total', index=False)
+excel_total_file_writer.save()
+
+#트리맵 테마별 
+
+df02["테마주"] = "네이버 테마주 - 테마명 - 회사명(현재가)"
+
+fig03 = px.treemap (df02, path = ['테마주', '테마명', '종목명'], values = '현재가')
+fig03.show ()
+
+fig04 = px.treemap (df02, path = ['테마주', '테마명', '종목명'], values = '현재가', color = '현재가')
+fig04.show ()
+
+#이전에는 실행되었지만 현재에는 네이버 크롤링이 제한돼있어서 실행불가
+
+os.chdir("C:\\Users\\Playdata\\table03\\")
+
+    # 바로가기 만들기 (테이블 2)
+    items01 = soup01.find_all("td", attrs = {"class":"name"})
+    for item01 in items01:
+        link01 = item01.find("a")["href"]
+        name01 = item01.a.text
+        name01 = name01.replace('/', ',') # open 함수를 이용할 때, '/'를 경로로 인식해 error가 발생한다.  
+        #print(name01, "바로가기 : {}".format("https://finance.naver.com" + link01))
+        url02 = "https://finance.naver.com/item/frgn" + link01[10:] + "&page="  # 만든 이유 : 테이블 3 제작에 사용하기 위해
+        #print(name01, "순매매 거래량 바로가기 : {}".format(url02)) # 총 280개의 url # 대충 1개의 테마주에 7개의 회사가 존재
+
+######################################################################################################################################
+        # 게시판 맨 마지막 페이지 확인하기     
+        res04 = requests.get(url02)
+        res04.raise_for_status()
+        soup04 = BeautifulSoup(res04.text, "lxml")
+
+        links = soup04.find("td", attrs = {"class":"pgRR"})
+        links = links.find("a")
+        for a in links:
+            href = a.attrs['href']
+            #print(int(href[32:]))
+            #print("총 " + href[32:] + " 개의 페이지가 확인 됐습니다.") # 각 회사의 마지막 페이지가 몇 페이지인지 알 수 있다.
+            
+            
+                    # 빈 csv 파일 (k*회사 수)개 제작 (테이블 3)
+        f02 = open(file= name01 + "(" + name + ")" +".csv", mode = "w", encoding = "utf-8-sig", newline = "")
+        writer02 = csv.writer(f02)                                                                                                                        
+        # (주의) 회사명 뒤에 테마종목을 작성해야한다. 여러 테마주를 가진 회사도 있으므로 회사명만 출력하면 중복오류가 발생 
+        title02 = "날짜 종가 전일비 등락률 거래량 순매매량 외국인순매매량 외국인보유주수 외국인보유율".split(" ")
+        writer02.writerow(title02) #한 행을 사용
+        #print(title02)
+
+        # 회사 주식 데이터를 가져온다  (테이블 3)
+        print("각 회사의 20일치 주가 : 몇 페이지를 가져오시겠습니까? (최소 2 ~ 최대 198)")
+        k1 = int(input()) #최대 198 # 페이지의 개수
+        list01 = [] # 종가를 담을 리스트
+        list02 = [] # 날짜를 담을 리스트
+
+        for page02 in range(1,k1+1): # k1에 1을 더해야함
+            if int(href[32:]) >= page02: #해당 페이지가 존재할 경우
+                res02 = requests.get(url02 + str(page02)) # 완전한 url을 가져온다
+                res02.raise_for_status()
+                soup02 = BeautifulSoup(res02.text, "lxml")
+
+                # 파서 나눈 것을 더 잘게 쪼개서 빈 1개의 csv파일에 넣는다. (테이블 3)
+                data_rows02 = soup02.find("table", attrs={"width":680, "class":"type2"}).find_all("tr") #테이블 - 한 열
+                for row02 in data_rows02:
+                    columns02 = row02.find_all("span") # "td"로 하면 빈 row가 있어서 그래프를 못그림
+                    if len(columns02) <= 1:
+                        continue                
+                    data02 = [column02.get_text().strip() for column02 in columns02] 
+                    list01.append(int(data02[1].replace(",", ""))) # 천단위를 구별하기 위해 사용하는 ,을 없애준다
+                    list02.append(data02[0]) # 날짜를 리스트에 넣는다
+                    writer02.writerow(data02)
+                
+            else: # 해당 페이지가 존재하지 않는 경우
+                print(str(page02) + "페이지는 없지만 바로 전까지의 모든 데이터 이용")
+                break
+            print(list01)
+            
+            				# 선형 그래프 제작
+        style.use('ggplot') 
+        plt.title(name01 + "(" + name + ")") # 제목을 회사명(테마명)으로 한다
+        plt.plot(list02, list01) # x = 날짜, y = 종가로 그래프를 그림
+        plt.gca().invert_xaxis() # 날짜가 내림차순이라 오름차순으로 바꿔준다
+        plt.xlabel('날짜') # x 라벨
+        plt.ylabel('종가') # y 라벨
+        plt.show()
+        
+#bokeh를 이용한 선 그래프 제작
+df03 = pd.read_csv("C:\\Users\\Playdata\\table03\\셀트리온(K-뉴딜지수(바이오)).csv")
+
+df03.index = pd.to_datetime(df03['날짜'])
+df03 = df03.drop('날짜', axis = 1)
+
+p = figure(plot_width= 700, plot_height = 300, x_axis_type="datetime", title = "셀트리온(K-뉴딜지수(바이오))의 종가 그래프")
+p.line(df03.index, df03['종가'].str.replace(',', ''), color='navy', alpha = 0.5)
+show(p)
