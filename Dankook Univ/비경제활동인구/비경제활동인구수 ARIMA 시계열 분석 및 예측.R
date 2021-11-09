@@ -1,92 +1,92 @@
-# ºñ°æÁ¦È°µ¿ÀÎ±¸¼ö ARIMA ½Ã°è¿­ ºĞ¼® ¹× ¿¹Ãø
+# ë¹„ê²½ì œí™œë™ì¸êµ¬ìˆ˜ ARIMA ì‹œê³„ì—´ ë¶„ì„ ë° ì˜ˆì¸¡
 
 library(astsa)
 library(lmtest)
 library(forecast)
 library(lubridate) #ymd function
 library(portes) #ljungbox
-library(fUnitRoots) #adfTest function »çÀü¿¡ ÆĞÅ°Áö
+library(fUnitRoots) #adfTest function ì‚¬ì „ì— íŒ¨í‚¤ì§€
 library(ggplot2)
 
-z<- scan("C:/Users/Playdata/Documents/r1.txt") # µ¥ÀÌÅÍ È£Ãâ
-pop <- ts(z, start = c(2010, 1), frequency = 12) # ½Ã°è¿­ µ¥ÀÌÅÍ·Î º¯È¯
+z<- scan("C:/Users/Playdata/Documents/r1.txt") # ë°ì´í„° í˜¸ì¶œ
+pop <- ts(z, start = c(2010, 1), frequency = 12) # ì‹œê³„ì—´ ë°ì´í„°ë¡œ ë³€í™˜
 pop
 
-lpop<-log(pop) # ·Î±×º¯È¯
-d1lpop<-diff(lpop, lag=1) # d=1 ÀÏ¹İ Â÷ºĞ
+lpop<-log(pop) # ë¡œê·¸ë³€í™˜ # ëª¨í˜•ì„ íƒì‹œ ë¶„ì‚°ë¶„ì„ê²°ê³¼(ê³„ìˆ˜ì˜ ìœ ì˜ì„±), ë¶„ì‚°ê°’, aicì˜ í™•ì—°í•œ ì°¨ì´ë¥¼ ë³´ì—¬ì£¼ê³ ì ì§„í–‰í•œë‹¤.
+d1lpop<-diff(lpop, lag=1) # d=1 ì¼ë°˜ ì°¨ë¶„
 
-acf2(d1lpop, main = "±×¸² 1-1 ·Î±×, ÀÏ¹İÂ÷ºĞÀÇ SACF¿Í SPACF")
-d12lpop <- diff(lpop, lag = 12) #°èÀıÂ÷ºĞ
+acf2(d1lpop, main = "ê·¸ë¦¼ 1-1 ë¡œê·¸, ì¼ë°˜ì°¨ë¶„ì˜ SACFì™€ SPACF")
+d12lpop <- diff(lpop, lag = 12) #ê³„ì ˆì°¨ë¶„
 
-acf2(d12lpop, main="±×¸² 1-2 ·Î±×, °èÀıÂ÷ºĞÀÇ SACF ¿Í SPACF")
-d1_12lpop <- diff(d12lpop) # ÀÏ¹İ 1Â÷Â÷ºĞ°ú °èÀıÂ÷ºĞ ¸ğµÎ½ÃÇà
+acf2(d12lpop, main="ê·¸ë¦¼ 1-2 ë¡œê·¸, ê³„ì ˆì°¨ë¶„ì˜ SACF ì™€ SPACF")
+d1_12lpop <- diff(d12lpop) # ì¼ë°˜ 1ì°¨ì°¨ë¶„ê³¼ ê³„ì ˆì°¨ë¶„ ëª¨ë‘ì‹œí–‰
 
-acf2(d1_12lpop, main = "±×¸² 1-3 ·Î±×, ÀÏ¹İ, °èÀıÂ÷ºĞÀÇ SACF¿Í SPACF")
-arima(lpop, order = c(0,1,1)) # ºñ°èÀı¼º MA(1)°ú 1Â÷ Â÷ºĞ- 26 -
+acf2(d1_12lpop, main = "ê·¸ë¦¼ 1-3 ë¡œê·¸, ì¼ë°˜, ê³„ì ˆì°¨ë¶„ì˜ SACFì™€ SPACF")
+arima(lpop, order = c(0,1,1)) # ë¹„ê³„ì ˆì„± MA(1)ê³¼ 1ì°¨ ì°¨ë¶„- 26 -
 
-sarima(lpop, 0,1,1, 1,1,0, 12) #fit111¿Í µ¿ÀÏ
-acf2(pop, main ="±×¸² 1-4 ºñ°æÁ¦È°µ¿ÀÎ±¸ ÀÚ·áÀÇ ACF & PACF")
+sarima(lpop, 0,1,1, 1,1,0, 12) #fit111ì™€ ë™ì¼
+acf2(pop, main ="ê·¸ë¦¼ 1-4 ë¹„ê²½ì œí™œë™ì¸êµ¬ ìë£Œì˜ ACF & PACF")
 
-#°èÀı¼ºÀº AR(1)¸ğÇü, ºñ°èÀı¼ºÀº MA(1)¸ğÇüÀ» µû¸£°í °¢°¢ 1Â÷ Â÷ºĞ ½ÇÇà
+#ê³„ì ˆì„±ì€ AR(1)ëª¨í˜•, ë¹„ê³„ì ˆì„±ì€ MA(1)ëª¨í˜•ì„ ë”°ë¥´ê³  ê°ê° 1ì°¨ ì°¨ë¶„ ì‹¤í–‰
 fit111 <- arima(lpop, order = c(0,1,1), seasonal = list(order = c(1,1,0), period =12), include.mean = F); fit111
 
-#°èÀı¼ºÀº AR(1)¸ğÇü, ºñ°èÀı¼ºÀº AR(1)¸ğÇüÀ» µû¸£°í °¢°¢ 1Â÷ Â÷ºĞ ½ÇÇà
+#ê³„ì ˆì„±ì€ AR(1)ëª¨í˜•, ë¹„ê³„ì ˆì„±ì€ AR(1)ëª¨í˜•ì„ ë”°ë¥´ê³  ê°ê° 1ì°¨ ì°¨ë¶„ ì‹¤í–‰
 fit222 = arima(lpop, order = c(1,1,0), 
                seasonal = list(order = c(1,1,0), period =12), include.mean = F); fit222
 
-#°èÀı¼ºÀº MA(1)¸ğÇü, ºñ°èÀı¼ºÀº MA(1)¸ğÇüÀ» µû¸£°í °¢°¢ 1Â÷ Â÷ºĞ ½ÇÇà
+#ê³„ì ˆì„±ì€ MA(1)ëª¨í˜•, ë¹„ê³„ì ˆì„±ì€ MA(1)ëª¨í˜•ì„ ë”°ë¥´ê³  ê°ê° 1ì°¨ ì°¨ë¶„ ì‹¤í–‰
 fit333 = arima(lpop, order = c(0,1,1), 
                seasonal = list(order = c(0,1,1), period =12), include.mean = F); fit333
 
-#°èÀı¼ºÀº MA(1)¸ğÇü, ºñ°èÀı¼ºÀº AR(1)¸ğÇüÀ» µû¸£°í °¢°¢ 1Â÷ Â÷ºĞ ½ÇÇà
+#ê³„ì ˆì„±ì€ MA(1)ëª¨í˜•, ë¹„ê³„ì ˆì„±ì€ AR(1)ëª¨í˜•ì„ ë”°ë¥´ê³  ê°ê° 1ì°¨ ì°¨ë¶„ ì‹¤í–‰
 fit444 = arima(lpop, order = c(1,1,0), 
                seasonal = list(order = c(0,1,1), period =12), include.mean = F); fit444
 
-sarima(lpop, 0,1,1, 1,1,0, 12) #fit111¿Í µ¿ÀÏ
-sarima(lpop, 1,1,0, 1,1,0, 12) #fit222¿Í µ¿ÀÏ
-sarima(lpop, 0,1,1, 0,1,1, 12) #fit333¿Í µ¿ÀÏ
-sarima(lpop, 1,1,0, 0,1,1, 12) #fit444¿Í µ¿ÀÏ
+sarima(lpop, 0,1,1, 1,1,0, 12) #fit111ì™€ ë™ì¼
+sarima(lpop, 1,1,0, 1,1,0, 12) #fit222ì™€ ë™ì¼
+sarima(lpop, 0,1,1, 0,1,1, 12) #fit333ì™€ ë™ì¼
+sarima(lpop, 1,1,0, 0,1,1, 12) #fit444ì™€ ë™ì¼
 
-coeftest(fit111) # °¢ °è¼öÀÇ À¯ÀÇ¼º ÆÄ¾Ç
+coeftest(fit111) # ê° ê³„ìˆ˜ì˜ ìœ ì˜ì„± íŒŒì•…
 coeftest(fit222)
 coeftest(fit333)
 coeftest(fit444)
 
-summary(fit111) # °è¼ö°ª, ºĞ»ê, ¿ìµµ, aic, ¿ÀÂ÷°ª ÆÄ¾Ç
+summary(fit111) # ê³„ìˆ˜ê°’, ë¶„ì‚°, ìš°ë„, aic, ì˜¤ì°¨ê°’ íŒŒì•…
 summary(fit222)
 summary(fit333)
 summary(fit444)
 
-fit111$aic # aic °ªÀ» ÆÄ¾Ç
+fit111$aic # aic ê°’ì„ íŒŒì•…
 fit222$aic
 fit333$aic
 fit444$aic
 
-fit111$sigma2 # ºĞ»ê°ªÀ» ÆÄ¾Ç
+fit111$sigma2 # ë¶„ì‚°ê°’ì„ íŒŒì•…
 fit222$sigma2
 fit333$sigma2
 fit444$sigma2
 
 fit1111 = arima(lpop, order = c(1,2,0), 
-                seasonal = list(order = c(0,2,1), period =12), include.mean = F); fit1111 #°ú´ëÂ÷ºĞÀ» ½Ãµµ
+                seasonal = list(order = c(0,2,1), period =12), include.mean = F); fit1111 #ê³¼ëŒ€ì°¨ë¶„ì„ ì‹œë„
 
-fit11 <- arima(lpop, order = c(0,1,2), seasonal = list(order = c(1,1,0), period =12), include.mean = F); fit11 #°ú´ëÀûÇÕÀ» ½Ãµµ
+fit11 <- arima(lpop, order = c(0,1,2), seasonal = list(order = c(1,1,0), period =12), include.mean = F); fit11 #ê³¼ëŒ€ì í•©ì„ ì‹œë„
 
 Box.test(resid(fit111), lag=6, type="L", fitdf = 2) #ljung-box test
 Box.test(resid(fit111), lag=12, type="L", fitdf = 2) #ljung-box test
 Box.test(resid(fit111), lag=24, type="L", fitdf = 2) #ljung-box test
 
-ts.plot(resid(fit111), ylab = "ÀÜÂ÷", main = "±×¸² 2-1 ºñ°æÁ¦È°µ¿ÀÎ±¸ÀÇ ÀÜÂ÷ ½Ã
-°è¿­ ±×¸²"); abline(h=0) 
+ts.plot(resid(fit111), ylab = "ì”ì°¨", main = "ê·¸ë¦¼ 2-1 ë¹„ê²½ì œí™œë™ì¸êµ¬ì˜ ì”ì°¨ ì‹œ
+ê³„ì—´ ê·¸ë¦¼"); abline(h=0) 
 
-par(new=T) #ÀÜÂ÷ÀÇ ºĞ»êÀ» ºñ±³ÇÏ°íÀÚ µÎ ±×·¡ÇÁ¸¦ °ãÄ§
+par(new=T) #ì”ì°¨ì˜ ë¶„ì‚°ì„ ë¹„êµí•˜ê³ ì ë‘ ê·¸ë˜í”„ë¥¼ ê²¹ì¹¨
 
 ts.plot(resid(fit11), ylab= "", col='red')
-ts.plot(resid(fit111), main = "±×¸² 2-2 ºñ°æÁ¦È°µ¿ÀÎ±¸ÀÇ ÀÜÂ÷ ½Ã°è¿­ ±×¸²"); 
+ts.plot(resid(fit111), main = "ê·¸ë¦¼ 2-2 ë¹„ê²½ì œí™œë™ì¸êµ¬ì˜ ì”ì°¨ ì‹œê³„ì—´ ê·¸ë¦¼"); 
 abline(h=0)
 
-acf2(resid(fit111), main="±×¸² 2-3 ºñ°æÁ¦È°µ¿ÀÎ±¸ÀÇ ÀÜÂ÷ SACF¿Í SPACF")
+acf2(resid(fit111), main="ê·¸ë¦¼ 2-3 ë¹„ê²½ì œí™œë™ì¸êµ¬ì˜ ì”ì°¨ SACFì™€ SPACF")
 
-qqnorm(resid(fit111), main = "±×¸² 2-4 ºñ°æÁ¦È°µ¿ÀÎ±¸ÀÇ ÀÜÂ÷ÀÇ Á¤±Ô¼º °ËÁ¤")
+qqnorm(resid(fit111), main = "ê·¸ë¦¼ 2-4 ë¹„ê²½ì œí™œë™ì¸êµ¬ì˜ ì”ì°¨ì˜ ì •ê·œì„± ê²€ì •")
 qqline(resid(fit111), col="red")
-sarima.for(pop, 20, 0,1,1, 1,1,0, 12) # ¹Ì·¡ 20½ÃÂ÷ ¿¹Ãø
+sarima.for(pop, 20, 0,1,1, 1,1,0, 12) # ë¯¸ë˜ 20ì‹œì°¨ ì˜ˆì¸¡
