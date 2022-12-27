@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>
+<gpx version="1.1" creator="com.ngt.android.nadeuli" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/gpx/1/1/gpx.xsd" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gpx10="http://www.topografix.com/GPX/1/0">
+<metadata><time>2022-12-04T00:36:16Z</time></metadata>
+<trk><name>2022-12-04_이신욱_-2</name>
+<trkseg>
+<trkpt lat="35.1826156" lon="129.0470046"><ele>74.17231</ele><time>2022-12-04T00:36:16Z</time></trkpt>
+<trkpt lat="35.1826494" lon="129.0469007"><ele>71.87458</ele><time>2022-12-04T00:36:24Z</time></trkpt>
+<trkpt lat="35.1661732" lon="129.012649"><ele>400.64917</ele><time>2022-12-04T05:10:41Z</time></trkpt>
+<trkpt lat="35.1583899" lon="129.0118314"><ele>197.91089</ele><time>2022-12-04T05:37:24Z</time></trkpt>
+</trkseg>
+</trk>
+</gpx>
